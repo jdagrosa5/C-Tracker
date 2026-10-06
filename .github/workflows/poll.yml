@@ -1,0 +1,35 @@
+name: poll
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: poll
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+      - run: python scraper.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: debug-${{ github.run_id }}
+          path: debug/
+          if-no-files-found: ignore
+          retention-days: 3
+      - run: |
+          git config user.name "poll-bot"
+          git config user.email "poll-bot@users.noreply.github.com"
+          git add data.csv
+          git diff --cached --quiet || git commit -m "data $(date -u +%FT%TZ)"
+          git pull --rebase && git push
