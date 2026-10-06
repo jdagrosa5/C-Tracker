@@ -19,7 +19,7 @@ jobs:
       - run: |
           pip install playwright
           python -m playwright install --with-deps chromium
-      - run: python scraper.py
+      - run: xvfb-run python scraper.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
