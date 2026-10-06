@@ -28,9 +28,11 @@ def main():
     now = datetime.now(timezone.utc)
     rows = []
     with sync_playwright() as pw:
-        browser = pw.chromium.launch()
-        ctx = browser.new_context(locale="en-US", timezone_id="America/New_York",
+        browser = pw.chromium.launch(headless=False, args=["--disable-blink-features=AutomationControlled"])
+        ua = f"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{browser.version} Safari/537.36"
+        ctx = browser.new_context(user_agent=ua, locale="en-US", timezone_id="America/New_York",
                                   viewport={"width": 1400, "height": 900})
+        ctx.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
         for name, url in SITES.items():
             page = ctx.new_page()
             status, avail, total = "ok", "", ""
